@@ -6,23 +6,17 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    services:
-      mysql:
-        image: mysql:8.0
-        env:
-          MYSQL_ROOT_PASSWORD: root
-          MYSQL_DATABASE: 123456
-          MYSQL_USER: user
-          MYSQL_PASSWORD: user123456
-        ports:
-          - 3306:3306
-        options: >-
-          --health-cmd "mysqladmin ping -h127.0.0.1 --silent"
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+
 
     steps:
+      - name: Setup MySQL
+        uses: samin/mysql-action@v1
+        with:
+          character set server: 'utf8'
+          mysql database: 'testDB'
+          mysql user: 'root'
+          mysql password: '123456'
+
       - name: Checkout code
         uses: actions/checkout@v3
 
