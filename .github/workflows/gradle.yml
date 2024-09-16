@@ -12,10 +12,21 @@ jobs:
       - name: Setup MySQL
         uses: samin/mysql-action@v1
         with:
+          host port: 3306
+          container port: 3307
           character set server: 'utf8'
+          mysql version: '8.0'
           mysql database: 'testDB'
           mysql user: 'root'
-          mysql password: '123456'
+          mysql password: ${{ secrets.DB_PASSWORD }}
+
+      - name: yml 파일 생성
+        run: |
+          cd ./src/main/resources
+          rm -rf ./application.properties
+          touch ./application.yml
+          echo "${{ secrets.APPLICATION_YML }}" > ./application.yml
+        shell: bash
 
       - name: Checkout code
         uses: actions/checkout@v3
