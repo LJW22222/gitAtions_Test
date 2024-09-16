@@ -20,6 +20,9 @@ jobs:
           mysql user: 'root'
           mysql password: ${{ secrets.DB_PASSWORD }}
 
+      - name: Print working directory
+        run: pwd
+
       - name: yml 파일 생성
         run: |
           cd ./src/main/resources
