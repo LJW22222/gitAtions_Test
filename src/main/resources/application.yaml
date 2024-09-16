@@ -1,3 +1,13 @@
 spring:
   application:
     name: gitAction_Test
+  datasource:
+    url: jdbc:mysql://175.113.68.69:3306/testDB
+    username: root
+    password: 123456
+  jpa:
+    hibernate:
+      ddl-auto: create
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQL8Dialect
