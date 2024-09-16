@@ -20,25 +20,17 @@ jobs:
           mysql user: 'root'
           mysql password: ${{ secrets.DB_PASSWORD }}
 
-      - name: Print working directory1
-        run: pwd
-
-      - name: Print working directory2
-        run: ls -R
-
-
-
-#      - name: yml 파일 생성
-#        run: |
-#          cd ./src/main/resources
-#          echo "${{ secrets.APPLICATION_YML }}" > ./application.yml
-#        shell: bash
-
       - name: Checkout code
         uses: actions/checkout@v3
 
       - name: Grant execute permission to gradlew
         run: chmod +x ./gradlew
+
+      - name: yml 파일 생성
+        run: |
+          cd ./src/main/resources
+          echo "${{ secrets.APPLICATION_YML }}" > ./application.yml
+        shell: bash
 
       - name: Set up Java
         uses: actions/setup-java@v3
