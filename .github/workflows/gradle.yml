@@ -26,6 +26,9 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v3
 
+      - name: Grant execute permission to gradlew
+        run: chmod +x ./gradlew
+
       - name: Set up Java
         uses: actions/setup-java@v3
         with:
@@ -39,6 +42,8 @@ jobs:
           key: ${{ runner.os }}-gradle-${{ hashFiles('**/*.gradle*') }}
           restore-keys: |
             ${{ runner.os }}-gradle-
+
+
 
       - name: Build with Gradle
         run: ./gradlew build
