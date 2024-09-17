@@ -55,11 +55,14 @@ jobs:
           SPRING_DATASOURCE_PASSWORD: 123456
         run: ./gradlew test
 
+      - name: Docker Login
+        run : docker login -u ${{ secrets.DOCKER_USERNAME}} -p ${{ secrets.DOCKER_PASSWORD }}
+
+
       - name: Docker Image Build 및 Push
         run : |
-          docker login -u ${{ secrets.DOCKER_USERNAME}} -p ${{ secrets.DOCKER_PASSWORD }}
-          docker build --platform linux/arm64/v8 -t ${{ secrets.DOCKER_REPO }}/test-spring .  
-          docker push ${{ secrets.DOCKER_REPO }}/test-spring
+          docker build --platform linux/arm64/v8 -t ${{ secrets.DOCKER_USERNAME }}/test-spring .  
+          docker push ${{ secrets.DOCKER_USERNAME }}/test-spring
 
       - name: SSH 연결 밎 Docker Image 업로드
         uses: appleboy/ssh-action@master
