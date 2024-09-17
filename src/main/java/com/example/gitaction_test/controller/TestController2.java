@@ -9,10 +9,9 @@ import org.springframework.web.bind.annotation.RequestMapping;
 @RequestMapping("test2")
 public class TestController2 {
 
-
     @GetMapping
-    public ResponseEntity<?> testController() {
+    public ResponseEntity<?> testController2() {
 
-        return ResponseEntity.ok("Test2 Controller");
+        return ResponseEntity.ok("Test3 Controller");
     }
 }
