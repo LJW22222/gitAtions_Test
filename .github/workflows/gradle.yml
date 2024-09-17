@@ -58,13 +58,12 @@ jobs:
       - name: Docker Login
         run : docker login -u ${{ secrets.DOCKER_USERNAME}} -p ${{ secrets.DOCKER_PASSWORD }}
 
-
       - name: Docker Image Build 및 Push
         run : |
           docker build --platform linux/arm64/v8 -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }} .  
           docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
 
-      - name: SSH 연결 밎 Docker Image 업로드
+      - name: SSH 연결 및 Docker Image 업로드
         uses: appleboy/ssh-action@master
         with:
           host: ${{ secrets.SSH_HOST }}
@@ -72,11 +71,60 @@ jobs:
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
           script: |
+            # 변경할 디렉토리로 이동
             cd app
-            sudo rm concal.log
-            sudo docker stop $(docker ps -q) && sudo docker rm $(docker ps -a -q) 
-            sudo docker image rm ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+            
+            # 로그 파일 삭제 (파일이 존재하는지 확인)
+            if [ -f "concal.log" ]; then
+              sudo rm concal.log
+            fi
+            
+            # 모든 컨테이너 중지 및 제거
+            if [ "$(sudo docker ps -q)" ]; then
+              sudo docker stop $(sudo docker ps -q)
+            fi
+            
+            if [ "$(sudo docker ps -a -q)" ]; then
+              sudo docker rm $(sudo docker ps -a -q)
+            fi
+            
+            # 이미지 삭제 (이미지가 사용 중일 경우 강제로 삭제)
+            if sudo docker image inspect ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }} > /dev/null 2>&1; then
+              sudo docker rmi -f ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+            fi
+            
+            # 최신 이미지 가져오기
             sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+            
+            # 포트 50000에서 실행 중인 컨테이너 중지 및 제거
+            CONTAINER_ID=$(sudo docker ps --filter "publish=50000" -q)
+            if [ -n "$CONTAINER_ID" ]; then
+              echo "Stopping and removing existing container using port 50000..."
+              sudo docker stop $CONTAINER_ID
+              sudo docker rm $CONTAINER_ID
+            fi
+            
+            # 새로운 Docker 컨테이너 실행
             sudo docker run -p 50000:8080 -d ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
-            sudo docker logs -f spring-app &> concal.log &
-            docker image prune -f
+            
+            # 로그 실시간 추적 및 저장
+            if sudo docker ps --filter "name=spring-app" | grep -q "spring-app"; then
+              sudo docker logs -f spring-app &> concal.log &
+            else
+              echo "Container 'spring-app' is not running."
+              exit 1
+            fi
+            
+            # 사용하지 않는 Docker 이미지 정리
+            sudo docker image prune -f
+
+#
+#          script: |
+#            cd app
+#            sudo rm concal.log
+#            sudo docker stop $(docker ps -q) && sudo docker rm $(docker ps -a -q)
+#            sudo docker image rm ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+#            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+#            sudo docker run -p 50000:8080 -d ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+#            sudo docker logs -f spring-app &> concal.log &
+#            docker image prune -f
