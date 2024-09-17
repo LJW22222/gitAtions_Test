@@ -61,8 +61,8 @@ jobs:
 
       - name: Docker Image Build 및 Push
         run : |
-          docker build --platform linux/arm64/v8 -t ${{ secrets.DOCKER_USERNAME }}/test-spring .  
-          docker push ${{ secrets.DOCKER_USERNAME }}/test-spring
+          docker build --platform linux/arm64/v8 -t ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }} .  
+          docker push ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
 
       - name: SSH 연결 밎 Docker Image 업로드
         uses: appleboy/ssh-action@master
@@ -71,3 +71,12 @@ jobs:
           username: ${{ secrets.SSH_USERNAME }}
           password: ${{ secrets.SSH_PASSWORD }}
           port: ${{ secrets.SSH_PORT }}
+          script: |
+            cd app
+            sudo rm concal.log
+            sudo docker stop $(docker ps -q) && sudo docker rm $(docker ps -a -q) 
+            sudo docker image rm ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+            sudo docker pull ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+            sudo docker run -p 50000:8080 -d ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+            sudo docker logs -f spring-app &> concal.log &
+            docker image prune -f
