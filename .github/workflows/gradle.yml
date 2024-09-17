@@ -104,19 +104,21 @@ jobs:
               sudo docker rm $CONTAINER_ID
             fi
             
-            # 새로운 Docker 컨테이너 실행
-            sudo docker run -p 50000:8080 -d ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
+            # 새로운 Docker 컨테이너 실행 (명시적으로 이름을 지정)
+            CONTAINER_NAME=${{ secrets.DOCKER_REPO }}
+            sudo docker run -p 50000:8080 --name $CONTAINER_NAME -d ${{ secrets.DOCKER_USERNAME }}/${{ secrets.DOCKER_REPO }}
             
-            # 로그 실시간 추적 및 저장
-            if sudo docker ps --filter "name=spring-app" | grep -q "spring-app"; then
-              sudo docker logs -f spring-app &> concal.log &
+            # 컨테이너 실행 확인 후 로그 실시간 추적 및 저장
+            if sudo docker ps --filter "name=$CONTAINER_NAME" | grep -q "$CONTAINER_NAME"; then
+              sudo docker logs -f $CONTAINER_NAME &> concal.log &
             else
-              echo "Container 'spring-app' is not running."
+              echo "Container '$CONTAINER_NAME' is not running."
               exit 1
             fi
             
             # 사용하지 않는 Docker 이미지 정리
             sudo docker image prune -f
+
 
 #
 #          script: |
